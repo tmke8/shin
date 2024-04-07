@@ -55,7 +55,8 @@ type engine struct {
 	historyPrefix string
 	historyIndex  uint32
 
-	startTime time.Time
+	startTime     time.Time
+	newKeyPressed bool
 }
 
 func (e *engine) exit() {
@@ -153,7 +154,13 @@ func (e *engine) ProcessKeyEvent(keyval uint32, keycode uint32, state uint32) (b
 
 	if state&ReleaseMask != 0 {
 		// Key released.
+		if !e.newKeyPressed {
+			// Pass along key release events that happened before the first key press.
+			e.ForwardKeyEvent(keyval, keycode, state)
+		}
 		return true, nil
+	} else if !e.newKeyPressed {
+		e.newKeyPressed = true
 	}
 
 	switch keyval {
